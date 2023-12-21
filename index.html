@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta name="viewport" charset="UTF-8" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+<style>
+    body{
+        margin-top: calc((100vh - min(100vh, calc(100vw * 3 / 4))) / 2);
+        margin-left: calc((100vw - min(100vw, calc(100vh * 4 / 3))) / 2);
+        overflow: hidden;
+        background-color: black;
+        image-rendering: pixelated;
+    }
+
+    canvas{
+        width: min(100vw, calc(100vh * 4 / 3));
+    }
+</style>
+<canvas id="game" width="640" height="480" oncontextmenu="javascript:return false;"></canvas>
+<script src="game.js" type="module"></script>
