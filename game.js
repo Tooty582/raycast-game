@@ -89,7 +89,7 @@ let runFunc = function(){
     let now = Date.now();
     context.fillStyle = "yellow";
     context.font = "bold 12px impact";
-    context.fillText(Math.floor(1000 / (now - lastTime)) + " " + camera.pos, 2, 12);
+    context.fillText(Math.floor(1000 / (now - lastTime)), 2, 12);
     lastTime = now;
     requestAnimationFrame(runFunc);
 }
