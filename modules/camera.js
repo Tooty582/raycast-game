@@ -1,4 +1,5 @@
 import { Vector2 } from "./vector2.js";
+
 export class Camera{
     static MOVE_SPEED = 0.1;
     static ROTATION_ANG = 0.05;
