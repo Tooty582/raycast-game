@@ -28,7 +28,6 @@ export class Spritesheet{
             let image = new Image();
             let sheet = this;
             image.addEventListener("load", function(){
-                console.log("loaded");
                 sheet.context.drawImage(image, imageX * sheet.spriteSize, imageY * sheet.spriteSize, sheet.spriteSize, sheet.spriteSize);
                 sheet.imageData = sheet.context.getImageData(0, 0, sheet.canvas.width, sheet.canvas.height);
             });
