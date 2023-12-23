@@ -1,4 +1,5 @@
 import { Vector2 } from "./vector2.js";
+import {Sprite} from "./sprite.js";
 
 export class Screen{
     static modulus(n, m){
@@ -74,6 +75,12 @@ export class Screen{
                             color = wall;
                         }else if(typeof(wall) == "function"){
                             color = wall(wallX, wallY);
+                        }else if(wall instanceof Sprite){
+                            let pixelX = wall.spriteSize * wallX;
+                            let pixelY = wall.spriteSize * wallY;
+                            pixelX -= pixelX % 1;
+                            pixelY -= pixelY % 1;
+                            color = wall.getPixel(pixelX, pixelY);
                         }
 
                         let wallShade = 1;
@@ -111,7 +118,13 @@ export class Screen{
                         if(typeof(floor) == "number"){
                             color = floor;
                         }else if(typeof(floor) == "function"){
-                            color = wall(floorX, floorY);
+                            color = floor(floorX, floorY);
+                        }else if(floor instanceof Sprite){
+                            let pixelX = floor.spriteSize * floorX;
+                            let pixelY = floor.spriteSize * floorY;
+                            pixelX -= pixelX % 1;
+                            pixelY -= pixelY % 1;
+                            color = floor.getPixel(pixelX, pixelY);
                         }
 
                         let r = ((color >> 24) & 0xFF);
@@ -142,7 +155,13 @@ export class Screen{
                         if(typeof(ceil) == "number"){
                             color = ceil;
                         }else if(typeof(ceil) == "function"){
-                            color = wall(ceilX, ceilY);
+                            color = ceil(ceilX, ceilY);
+                        }else if(ceil instanceof Sprite){
+                            let pixelX = ceil.spriteSize * ceilX;
+                            let pixelY = ceil.spriteSize * ceilY;
+                            pixelX -= pixelX % 1;
+                            pixelY -= pixelY % 1;
+                            color = ceil.getPixel(pixelX, pixelY);
                         }
 
                         let r = ((color >> 24) & 0xFF);

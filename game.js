@@ -1,12 +1,14 @@
 import { Camera } from "./modules/camera.js";
 import { Input } from "./modules/input.js";
 import { Screen } from "./modules/screen.js";
+import { Spritesheet } from "./modules/spritesheet.js";
 import { Vector2 } from "./modules/vector2.js";
 
 let canvas = document.getElementById("game");
 let context = canvas.getContext("2d");
 context.imageSmoothingEnabled = false;
 
+let spritesheet = new Spritesheet(256, 2);
 let map = {};
 map.walls = [
     [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
@@ -62,12 +64,13 @@ map.ceils = [
     [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
     [2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1]
 ];
-map.wall1 = 0x202020FF;
-map.wall2 = 0xFFFFFFFF;
-map.floor1 = 0x202020FF;
-map.floor2 = 0xFFFFFFFF;
-map.ceil1 = 0x202020FF;
-map.ceil2 = 0xFFFFFFFF;
+
+map.wall1 = spritesheet.addImage("./assets/crate.png", "crate");
+map.wall2 = spritesheet.addImage("./assets/crate_red.png", "crate red");
+map.floor1 = map.wall1;
+map.floor2 = map.wall2;
+map.ceil1 = map.wall1;
+map.ceil2 = map.wall2;
 map.floorShade = 0.9619397662556433780640915946984;
 map.ceilShade = 0.6913417161825448858642299920152;
 map.wallLightVec = new Vector2(1, 0.5).normalize();
