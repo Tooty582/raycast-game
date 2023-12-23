@@ -73,6 +73,9 @@ map.ceilShade = 0.6913417161825448858642299920152;
 map.wallLightVec = new Vector2(1, 0.5).normalize();
 map.wallLightShade = 0.9619397662556433780640915946984;
 map.wallDarkShade = 0.5;
+map.fogColor = 0xC0C0C0FF;
+map.fogNear = 12;
+map.fogFar = 16;
 
 let camera = new Camera(new Vector2(8, 8), new Vector2(1, 0), new Input());
 const INTERVAL = 1000/60;

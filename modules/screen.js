@@ -21,7 +21,7 @@ export class Screen{
                 let hitNorm = null;
                 let hitRight = null;
 
-                while(map.walls[posX][posY] == 0){
+                while(map.walls[posX][posY] == 0 && camera.pos.subtract(curPos).length() * camera.forward.dot(dir) < map.fogFar){
                     let stepX = 0;
                     let stepY = 0;
                     let nextX = null;
@@ -61,7 +61,6 @@ export class Screen{
 
                 let wallHeight = width / dist;
                 let start = height / 2 - wallHeight * (1 - renderHeight);
-                let xHit = (hitNorm.x != 0)
                 let wall = map["wall" + map.walls[posX][posY]];
 
                 for(let y = 0; y < height; y++){
@@ -84,9 +83,21 @@ export class Screen{
                         let darkShade = map.wallDarkShade || 0;
                         let lightShade = map.wallLightShade || 1;
 
-                        image[(y * width + x) * 4] = ((color >> 24) & 0xFF) * (darkShade + (lightShade - darkShade) * wallShade);
-                        image[(y * width + x) * 4 + 1] = ((color >> 16) & 0xFF) * (darkShade + (lightShade - darkShade) * wallShade);
-                        image[(y * width + x) * 4 + 2] = ((color >> 8) & 0xFF) * (darkShade + (lightShade - darkShade) * wallShade);
+                        let r = ((color >> 24) & 0xFF);
+                        let g = ((color >> 16) & 0xFF);
+                        let b = ((color >> 8) & 0xFF);
+
+                        r *= (darkShade + (lightShade - darkShade) * wallShade);
+                        g *= (darkShade + (lightShade - darkShade) * wallShade);
+                        b *= (darkShade + (lightShade - darkShade) * wallShade);
+
+                        let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
+                        if(fogNum > 1) fogNum = 1;
+                        if(fogNum < 0) fogNum = 0;
+
+                        image[(y * width + x) * 4] = r * (1 - fogNum) + ((map.fogColor >> 24) & 0xFF) * fogNum;
+                        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((map.fogColor >> 16) & 0xFF) * fogNum;
+                        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((map.fogColor >> 8) & 0xFF) * fogNum;
                         image[(y * width + x) * 4 + 3] = 255;
                     }else if(y > height / 2){
                         let dist = (width * renderHeight - 1) / (y - height / 2);
@@ -103,9 +114,21 @@ export class Screen{
                             color = wall(floorX, floorY);
                         }
 
-                        image[(y * width + x) * 4] = ((color >> 24) & 0xFF) * (map.floorShade || 1);
-                        image[(y * width + x) * 4 + 1] = ((color >> 16) & 0xFF) * (map.floorShade || 1);
-                        image[(y * width + x) * 4 + 2] = ((color >> 8) & 0xFF) * (map.floorShade || 1);
+                        let r = ((color >> 24) & 0xFF);
+                        let g = ((color >> 16) & 0xFF);
+                        let b = ((color >> 8) & 0xFF);
+
+                        r *= (map.floorShade || 1);
+                        g *= (map.floorShade || 1);
+                        b *= (map.floorShade || 1);
+
+                        let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
+                        if(fogNum > 1) fogNum = 1;
+                        if(fogNum < 0) fogNum = 0;
+
+                        image[(y * width + x) * 4] = r * (1 - fogNum) + ((map.fogColor >> 24) & 0xFF) * fogNum;
+                        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((map.fogColor >> 16) & 0xFF) * fogNum;
+                        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((map.fogColor >> 8) & 0xFF) * fogNum;
                         image[(y * width + x) * 4 + 3] = 255;
                     }else{
                         let dist = width * (1 - renderHeight) / (height / 2 - y);
@@ -122,9 +145,21 @@ export class Screen{
                             color = wall(ceilX, ceilY);
                         }
 
-                        image[(y * width + x) * 4] = ((color >> 24) & 0xFF) * (map.ceilShade || 1);
-                        image[(y * width + x) * 4 + 1] = ((color >> 16) & 0xFF) * (map.ceilShade || 1);
-                        image[(y * width + x) * 4 + 2] = ((color >> 8) & 0xFF) * (map.ceilShade || 1);
+                        let r = ((color >> 24) & 0xFF);
+                        let g = ((color >> 16) & 0xFF);
+                        let b = ((color >> 8) & 0xFF);
+
+                        r *= (map.ceilShade || 1);
+                        g *= (map.ceilShade || 1);
+                        b *= (map.ceilShade || 1);
+
+                        let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
+                        if(fogNum > 1) fogNum = 1;
+                        if(fogNum < 0) fogNum = 0;
+
+                        image[(y * width + x) * 4] = r * (1 - fogNum) + ((map.fogColor >> 24) & 0xFF) * fogNum;
+                        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((map.fogColor >> 16) & 0xFF) * fogNum;
+                        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((map.fogColor >> 8) & 0xFF) * fogNum;
                         image[(y * width + x) * 4 + 3] = 255;
                     }
                 }
