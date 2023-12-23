@@ -80,6 +80,14 @@ export class Vector2{
         return Vector2.rotate(this, ang);
     }
 
+    static equals(vec1, vec2){
+        return vec1.x == vec2.x && vec1.y == vec2.y;
+    }
+
+    equals(vec){
+        return Vector2.equals(this, vec);
+    }
+
     static clone(vec){
         return new Vector2(vec.x, vec.y, vec.z);
     }
