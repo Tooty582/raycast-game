@@ -1,4 +1,4 @@
-import {Sprite} from "./sprite.js";
+import { Sprite } from "./sprite.js";
 
 export class Spritesheet{
     constructor(spriteSize, sheetSize, imageObj){
