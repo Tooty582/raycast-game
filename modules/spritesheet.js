@@ -55,6 +55,7 @@ export class Spritesheet{
         let r = this.imageData.data[imageOffset];
         let g = this.imageData.data[imageOffset + 1];
         let b = this.imageData.data[imageOffset + 2];
-        return (r << 24) + (g << 16) + (b << 8) + 0xFF;
+        let a = this.imageData.data[imageOffset + 3];
+        return (r << 24) + (g << 16) + (b << 8) + a;
     }
 }
