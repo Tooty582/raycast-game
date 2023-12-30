@@ -80,6 +80,12 @@ export class Vector2{
         return Vector2.rotate(this, ang);
     }
 
+    static localToLocal(norm1, norm2, vec){
+        localX = norm1.dot(vec);
+        localY = new Vector2(-norm1.y, norm1.x).dot(vec);
+        return norm2.multiply(localX).add(new Vector2(-norm2.y, norm2.x).multiply(localY));
+    }
+
     static equals(vec1, vec2){
         return vec1.x == vec2.x && vec1.y == vec2.y;
     }
