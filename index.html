@@ -2,15 +2,22 @@
 <meta name="viewport" charset="UTF-8" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
 <style>
     body{
-        margin-top: calc((100vh - min(100vh, calc(100vw * 3 / 4))) / 2);
-        margin-left: calc((100vw - min(100vw, calc(100vh * 4 / 3))) / 2);
-        overflow: hidden;
+        margin: 0px;
+        text-align: center;
+        display: block;
         background-color: black;
         image-rendering: pixelated;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        overflow: hidden;
     }
 
     canvas{
-        width: min(100vw, calc(100vh * 4 / 3));
+        object-fit: contain;
+        max-width: 100vw;
+        height: 100vh;
     }
 </style>
 <canvas id="game" width="320" height="240" oncontextmenu="javascript:return false;"></canvas>
