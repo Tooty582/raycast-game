@@ -84,22 +84,22 @@ map.fogColor = 0xC0C0C0FF;
 map.fogNear = 12;
 map.fogFar = 16;
 map.portals = {
-    "15 7": {
+    "2 2": {
         sprite: portalSprite,
         normal: new Vector2(-1, 0),
         maskColor: 0x00FF0001,
-        posX: 15,
-        posY: 7
-    }, "7 15": {
+        posX: 2,
+        posY: 2
+    }, "2 13": {
         sprite: portalSprite,
-        normal: new Vector2(0, -1),
+        normal: new Vector2(-1, 0),
         maskColor: 0x00FF0001,
-        posX: 7,
-        posY: 15
+        posX: 2,
+        posY: 13
     }
 };
-map.portals["15 7"].linkedPortal = map.portals["7 15"];
-map.portals["7 15"].linkedPortal = map.portals["15 7"];
+map.portals["2 2"].linkedPortal = map.portals["2 13"];
+map.portals["2 13"].linkedPortal = map.portals["2 2"];
 
 let input = new Input();
 let camera = new Camera(new Vector2(8, 8), new Vector2(1, 0), input);
