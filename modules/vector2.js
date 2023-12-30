@@ -81,8 +81,8 @@ export class Vector2{
     }
 
     static localToLocal(norm1, norm2, vec){
-        localX = norm1.dot(vec);
-        localY = new Vector2(-norm1.y, norm1.x).dot(vec);
+        let localX = norm1.dot(vec);
+        let localY = new Vector2(-norm1.y, norm1.x).dot(vec);
         return norm2.multiply(localX).add(new Vector2(-norm2.y, norm2.x).multiply(localY));
     }
 
