@@ -101,13 +101,15 @@ map.portals = {
 map.portals["15 7"].linkedPortal = map.portals["7 15"];
 map.portals["7 15"].linkedPortal = map.portals["15 7"];
 
-let camera = new Camera(new Vector2(8, 8), new Vector2(1, 0), new Input());
+let input = new Input();
+let camera = new Camera(new Vector2(8, 8), new Vector2(1, 0), input);
 const INTERVAL = 1000/60;
 let intervalTime = Date.now();
 let lastTime = intervalTime
 
 let runFunc = function(){
     while(intervalTime < Date.now()){
+        input.update();
         camera.update(map);
         intervalTime += INTERVAL;
     }
