@@ -117,7 +117,7 @@ let runFunc = function(){
     Screen.render(context, camera, map, Math.PI / 3, 0.5);
     let now = Date.now();
     context.fillStyle = "yellow";
-    context.font = "bold 12px impact";
+    context.font = "bold 12px sans-serif";
     context.fillText(Math.floor(1000 / (now - lastTime)), 2, 12);
     lastTime = now;
     requestAnimationFrame(runFunc);
