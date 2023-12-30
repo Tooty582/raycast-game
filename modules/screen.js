@@ -256,12 +256,12 @@ export class Screen{
                     let linkedPortalPos = new Vector2(posX, posY);
                     if(linkedPortal.normal.x == 0){
                         linkedPortalPos.x += 0.5;
-                        if(linkedPortal.normal.y > 0){
+                        if(linkedPortal.normal.y < 0){
                             linkedPortalPos.y += 1;
                         }
                     }else{
                         linkedPortalPos.y += 0.5;
-                        if(linkedPortal.normal.x > 0){
+                        if(linkedPortal.normal.x < 0){
                             linkedPortalPos.x += 1;
                         }
                     }
