@@ -8,7 +8,7 @@ let canvas = document.getElementById("game");
 let context = canvas.getContext("2d");
 context.imageSmoothingEnabled = false;
 
-let spritesheet = new Spritesheet(256, 2);
+let spritesheet = new Spritesheet(64, 2);
 let map = {};
 map.walls = [
     [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
@@ -65,12 +65,16 @@ map.ceils = [
     [2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1]
 ];
 
-map.wall1 = spritesheet.addImage("./assets/crate.png", "crate");
-map.wall2 = spritesheet.addImage("./assets/crate_red.png", "crate red");
-map.floor1 = map.wall1;
-map.floor2 = map.wall2;
-map.ceil1 = map.wall1;
-map.ceil2 = map.wall2;
+let crateSprite = spritesheet.addImage("./assets/crate.png", "crate");
+let redCrateSprite = spritesheet.addImage("./assets/crate_red.png", "crate red");
+let portalSprite = spritesheet.addImage("./assets/portal.png", "portal");
+
+map.wall1 = crateSprite;
+map.wall2 = redCrateSprite;
+map.floor1 = crateSprite;
+map.floor2 = redCrateSprite;
+map.ceil1 = crateSprite;
+map.ceil2 = redCrateSprite;
 map.floorShade = 0.9619397662556433780640915946984;
 map.ceilShade = 0.6913417161825448858642299920152;
 map.wallLightVec = new Vector2(1, 0.5).normalize();
@@ -79,6 +83,23 @@ map.wallDarkShade = 0.5;
 map.fogColor = 0xC0C0C0FF;
 map.fogNear = 12;
 map.fogFar = 16;
+map.portals = {
+    "15 7": {
+        sprite: portalSprite,
+        normal: new Vector2(-1, 0),
+        maskColor: 0x00FF0001,
+        posX: 15,
+        posY: 7
+    }, "7 15": {
+        sprite: portalSprite,
+        normal: new Vector2(0, -1),
+        maskColor: 0x00FF0001,
+        posX: 7,
+        posY: 15
+    }
+};
+map.portals["15 7"].linkedPortal = map.portals["7 15"];
+map.portals["7 15"].linkedPortal = map.portals["15 7"];
 
 let camera = new Camera(new Vector2(8, 8), new Vector2(1, 0), new Input());
 const INTERVAL = 1000/60;
