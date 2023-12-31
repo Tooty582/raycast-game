@@ -142,19 +142,19 @@ export class Camera{
         }
 
         let moveVec = new Vector2(0, 0);
-        if(this.input.forward && !this.input.back){
+        if(this.input.forward){
             moveVec = moveVec.add(this.forward.multiply(this.input.forward));
         }
 
-        if(this.input.back && !this.input.forward){
+        if(this.input.back){
             moveVec = moveVec.add(this.forward.multiply(-this.input.back));
         }
 
-        if(this.input.left && !this.input.right){
+        if(this.input.left){
             moveVec = moveVec.add(this.right.multiply(-this.input.left));
         }
 
-        if(this.input.right && !this.input.left){
+        if(this.input.right){
             moveVec = moveVec.add(this.right.multiply(this.input.right));
         }
 

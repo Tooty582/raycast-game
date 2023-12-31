@@ -1,3 +1,7 @@
+function cb(e){
+    if(e) console.log(e);
+}
+
 export class Input{
     static defaultMapping = {
         KeyA: "left",
@@ -22,7 +26,6 @@ export class Input{
     constructor(mapping){
         this.mapping = mapping || Object.assign({}, Input.defaultMapping);
         this.turnNum = 0;
-        this.didInput = false;
         this.keys = {};
         this.mouseAxes = {
             MouseNegX: 0,
@@ -58,6 +61,9 @@ export class Input{
         addEventListener("mousedown", (e) =>{
             if(!document.pointerLockElement){
                 document.body.requestPointerLock({unadjustedMovement: true});
+                if(document.fullscreenEnabled && !document.fullscreenElement){
+                    document.body.requestFullscreen();
+                }
             }else{
                 if(e.button == 0){
                     this.mouseButtons.LClick = true;
@@ -93,19 +99,31 @@ export class Input{
 
         addEventListener("fullscreenchange", (e) => {
             if(document.fullscreenElement){
-                screen.orientation.lock("landscape");
+                screen.orientation.lock("landscape").then(cb, cb);
             }else{
                 screen.orientation.unlock();
+            }
+        })
+
+        addEventListener("touchstart", (e) => {
+            if(document.fullscreenEnabled && !document.fullscreenElement){
+                document.body.requestFullscreen();
             }
         })
     }
 
     update(){
+        this.left = 0;
+        this.right = 0;
+        this.forward = 0;
+        this.back = 0;
+        this.turnLeft = 0;
+        this.turnRight = 0;
+
         for(let [k,v] of Object.entries(this.mouseAxes)){
             if(this.mapping[k]){
-                this[this.mapping[k]] = v;
+                this[this.mapping[k]] = Math.max(v, this[this.mapping[k]]);
                 this.mouseAxes[k] = 0;
-                if(v) this.didInput = true;
             }
         }
 
@@ -135,27 +153,15 @@ export class Input{
 
             for(let [k, v] of Object.entries(controllerInput)){
                 if(this.mapping[k]){
-                    this[this.mapping[k]] = v;
-                    if(v > 0){
-                        this.didInput = true;
-                    }
+                    this[this.mapping[k]] = Math.max(this[this.mapping[k]], v);
                 }
             }
         }
 
         for(let [k,v] of Object.entries(this.keys)){
             if(this.mapping[k]){
-                this[this.mapping[k]] = v && 1 || 0;
-                if(v) this.didInput = true;
+                this[this.mapping[k]] = v && 1 || this[this.mapping[k]];
             }
-        }
-
-        if(this.didInput){
-            if(document.fullscreenEnabled && !document.fullscreenElement){
-                let fullScreenFunc = document.body.webkitRequestFullscreen;
-                if(fullScreenFunc) fullScreenFunc();
-            }
-            this.didInput = false;
         }
     }
 }
