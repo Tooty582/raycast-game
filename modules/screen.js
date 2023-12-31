@@ -97,7 +97,15 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
         let floorPos = camPos.add(dir.multiply(dist / camForward.dot(dir)));
         let floorX = floorPos.x % 1;
         let floorY = floorPos.y % 1;
-        let floor = map["floor" + map.floors[floorPos.x - floorX][floorPos.y - floorY]]
+        let floorXRow = map.floors[floorPos.x - floorX];
+        let floor = null;
+
+        if(floorXRow){
+            let floorNum = floorXRow[floorPos.y - floorY]
+            if(floorNum){
+                floor = map["floor" + floorNum]
+            }
+        }
 
         let color = 0
 
@@ -134,7 +142,15 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
         let ceilPos = camPos.add(dir.multiply(dist / camForward.dot(dir)));
         let ceilX = ceilPos.x % 1;
         let ceilY = ceilPos.y % 1;
-        let ceil = map["ceil" + map.ceils[ceilPos.x - ceilX][ceilPos.y - ceilY]]
+        let ceilXRow = map.ceils[ceilPos.x - ceilX];
+        let ceil = null;
+        
+        if(ceilXRow){
+            let ceilNum = ceilXRow[ceilPos.y - ceilY];
+            if(ceilNum){
+                ceil = map["ceil" + ceilNum]
+            }
+        }
 
         let color = 0
 
