@@ -1,5 +1,77 @@
 import { Vector2 } from "./vector2.js";
 
+function mapCollision(map, nextPos){
+    let remX = nextPos.x % 1;
+    let remY = nextPos.y % 1;
+    let mapX = nextPos.x - remX;
+    let mapY = nextPos.y - remY;
+    let returnPos = nextPos.clone();
+
+    let xDir = 0;
+    let yDir = 0;
+    if(remX < Camera.COLLISION_HULL){
+        xDir = -1;
+    }else if(1 - remX < Camera.COLLISION_HULL){
+        xDir = 1;
+    }
+
+    if(remY < Camera.COLLISION_HULL){
+        yDir = -1;
+    }else if(1 - remY < Camera.COLLISION_HULL){
+        yDir = 1;
+    }
+
+    let xHit = false;
+    if(xDir != 0 && map.walls[mapX + xDir][mapY] != 0){
+        if(xDir < 0){
+            returnPos.x = mapX + Camera.COLLISION_HULL;
+        }else{
+            returnPos.x = mapX + 1 - Camera.COLLISION_HULL;
+        }
+
+        xHit = true;
+    }
+
+    let yHit = false;
+    if(yDir != 0 && map.walls[mapX][mapY + yDir] != 0){
+        if(yDir < 0){
+            returnPos.y = mapY + Camera.COLLISION_HULL;
+        }else{
+            returnPos.y = mapY + 1 - Camera.COLLISION_HULL;
+        }
+
+        yHit = true;
+    }
+
+    if(!xHit && !yHit && xDir != 0 && yDir != 0 && map.walls[mapX + xDir][mapY + yDir] != 0){
+        let xDist = remX;
+        if(xDir > 0){
+            xDist = 1 - remX;
+        }
+
+        let yDist = remY;
+        if(yDir > 0){
+            yDist = 1 - remY;
+        }
+
+        if(xDist > yDist){
+            if(xDir < 0){
+                returnPos.x = mapX + Camera.COLLISION_HULL;
+            }else{
+                returnPos.x = mapX + 1 - Camera.COLLISION_HULL;
+            }
+        }else{
+            if(yDir < 0){
+                returnPos.y = mapY + Camera.COLLISION_HULL;
+            }else{
+                returnPos.y = mapY + 1 - Camera.COLLISION_HULL;
+            }
+        }
+    }
+
+    return returnPos;
+}
+
 export class Camera{
     static MOVE_SPEED = 0.1;
     static ROTATION_ANG = 0.05;
@@ -52,26 +124,6 @@ export class Camera{
         }
         moveVec = moveVec.multiply(Camera.MOVE_SPEED);
 
-        let xCollPos = this.pos.add(new Vector2(moveVec.x / Math.abs(moveVec.x) * Camera.COLLISION_HULL + moveVec.x, 0));
-        if(map.walls[xCollPos.x - xCollPos.x % 1][xCollPos.y - xCollPos.y % 1] == 0){
-            this.pos.x += moveVec.x;
-        }else{
-            if(moveVec.x > 0){
-                this.pos.x = this.pos.x - this.pos.x % 1 + 1 - Camera.COLLISION_HULL;
-            }else{
-                this.pos.x = this.pos.x - this.pos.x % 1 + Camera.COLLISION_HULL;
-            }
-        }
-
-        let yCollPos = this.pos.add(new Vector2(0, moveVec.y / Math.abs(moveVec.y) * Camera.COLLISION_HULL + moveVec.y));
-        if(map.walls[yCollPos.x - yCollPos.x % 1][yCollPos.y - yCollPos.y % 1] == 0){
-            this.pos.y += moveVec.y;
-        }else{
-            if(moveVec.y > 0){
-                this.pos.y = this.pos.y - this.pos.y % 1 + 1 - Camera.COLLISION_HULL;
-            }else{
-                this.pos.y = this.pos.y - this.pos.y % 1 + Camera.COLLISION_HULL;
-            }
-        }
+        this.pos = mapCollision(map, this.pos.add(moveVec));
     }
 }
