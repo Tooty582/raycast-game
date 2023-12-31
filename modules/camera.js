@@ -121,7 +121,6 @@ function mapCollision(map, nextPos, cam){
 export class Camera{
     static MOVE_SPEED = 0.1;
     static ROTATION_ANG = 0.05;
-    static MOUSE_ROTATION_ANG = 0.003;
     static COLLISION_HULL = 0.15;
 
     constructor(pos, dir, input){
@@ -132,20 +131,14 @@ export class Camera{
     }
 
     update(map){
-        if(this.input.turnLeft && !this.input.turnRight){
+        if(this.input.turnLeft){
             this.forward = this.forward.rotate(-this.input.turnLeft * Camera.ROTATION_ANG);
             this.right = new Vector2(-this.forward.y, this.forward.x);
         }
 
-        if(this.input.turnRight && !this.input.turnLeft){
+        if(this.input.turnRight){
             this.forward = this.forward.rotate(this.input.turnRight * Camera.ROTATION_ANG);
             this.right = new Vector2(-this.forward.y, this.forward.x);
-        }
-
-        if(this.input.turnNum && this.input.turnNum != 0){
-            this.forward = this.forward.rotate(this.input.turnNum * Camera.MOUSE_ROTATION_ANG);
-            this.right = new Vector2(-this.forward.y, this.forward.x);
-            this.input.turnNum = 0;
         }
 
         let moveVec = new Vector2(0, 0);
