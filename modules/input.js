@@ -10,6 +10,7 @@ export class Input{
         KeyD: "right",
         KeyW: "forward",
         KeyS: "back",
+        AltLeft: "walk",
         ArrowLeft: "turnLeft",
         ArrowRight: "turnRight",
         MouseNegX: "turnLeft",
@@ -154,6 +155,7 @@ export class Input{
         this.right = 0;
         this.forward = 0;
         this.back = 0;
+        this.walk = 0;
         this.turnLeft = 0;
         this.turnRight = 0;
 

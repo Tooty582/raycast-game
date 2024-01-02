@@ -162,6 +162,7 @@ export class Camera{
             moveVec = moveVec.normalize();
         }
         moveVec = moveVec.multiply(Camera.MOVE_SPEED);
+        if(this.input.walk) moveVec = moveVec.multiply(Math.max(0, Math.min(1, 1 - this.input.walk / 2)));
 
         this.pos = mapCollision(map, this.pos.add(moveVec), this);
     }
