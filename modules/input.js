@@ -60,9 +60,11 @@ export class Input{
 
         addEventListener("mousedown", (e) =>{
             if(!document.pointerLockElement){
-                document.body.requestPointerLock({unadjustedMovement: true});
-                if(document.fullscreenEnabled && !document.fullscreenElement){
-                    document.body.requestFullscreen();
+                if(e.button == 0){
+                    document.body.requestPointerLock({unadjustedMovement: true});
+                    if(document.fullscreenEnabled && !document.fullscreenElement){
+                        document.body.requestFullscreen();
+                    }
                 }
             }else{
                 if(e.button == 0){
