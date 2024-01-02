@@ -2,9 +2,14 @@ import { Camera } from "./modules/camera.js";
 import { Input } from "./modules/input.js";
 import { Screen } from "./modules/screen.js";
 import { Spritesheet } from "./modules/spritesheet.js";
+import { TouchControls } from "./modules/touch_controls.js";
 import { Vector2 } from "./modules/vector2.js";
 
-let canvas = document.getElementById("game");
+let displayCanvas = document.getElementById("game");
+let displayContext = displayCanvas.getContext("2d");
+let canvas = document.createElement("canvas");
+canvas.width = 320;
+canvas.height = 240;
 let context = canvas.getContext("2d");
 context.imageSmoothingEnabled = false;
 
@@ -101,25 +106,54 @@ map.portals = {
 map.portals["2 2"].linkedPortal = map.portals["2 13"];
 map.portals["2 13"].linkedPortal = map.portals["2 2"];
 
-let input = new Input();
+let touchControls = new TouchControls();
+let input = new Input(null, touchControls);
 let camera = new Camera(new Vector2(8, 8), new Vector2(1, 0), input);
 const INTERVAL = 1000/60;
-let intervalTime = Date.now();
-let lastTime = intervalTime
+let intervalTime = performance.now();
+let framesThisPeriod = 0;
+let fps = 0;
+let lastTime = intervalTime;
 
 let runFunc = function(){
-    while(intervalTime < Date.now()){
+    let now = performance.now();
+    while(intervalTime < now){
         input.update();
         camera.update(map);
         intervalTime += INTERVAL;
     }
     
     Screen.render(context, camera, map, Math.PI / 3, 0.5);
-    let now = Date.now();
     context.fillStyle = "yellow";
     context.font = "bold 12px sans-serif";
-    context.fillText(Math.floor(1000 / (now - lastTime)), 2, 12);
-    lastTime = now;
+
+    if(now > lastTime + 250){
+        let delta = now - lastTime;
+        fps = framesThisPeriod / (delta / 1000);
+        fps -= fps % 1;
+        framesThisPeriod = 0;
+        lastTime = now;
+    }
+    context.fillText(fps, 2, 12);
+    framesThisPeriod++;
+
+    displayCanvas.width = window.innerWidth;
+    displayCanvas.height = window.innerHeight;
+    let widthScale = displayCanvas.width / canvas.width;
+    let heightScale = displayCanvas.height / canvas.height;
+    let scale = 0;
+    let xOff = 0;
+    let yOff = 0;
+    if(widthScale > heightScale){
+        xOff = (widthScale - heightScale) / widthScale * displayCanvas.width / 2;
+        scale = heightScale;
+    }else{
+        yOff = (heightScale - widthScale) / heightScale * displayCanvas.height / 2;
+        scale = widthScale;
+    }
+    displayContext.imageSmoothingEnabled = false;
+    displayContext.drawImage(canvas, xOff, yOff, canvas.width * scale, canvas.height * scale);
+    if(input.touchEnabled) touchControls.render(displayContext);
     requestAnimationFrame(runFunc);
 }
 

@@ -1,3 +1,5 @@
+
+
 function cb(e){
     if(e) console.log(e);
 }
@@ -23,7 +25,7 @@ export class Input{
     static DEAD_ZONE = 0.1;
     static MOUSE_ROTATION_ANG = 0.06;
 
-    constructor(mapping){
+    constructor(mapping, touchControls){
         this.mapping = mapping || Object.assign({}, Input.defaultMapping);
         this.turnNum = 0;
         this.keys = {};
@@ -34,6 +36,9 @@ export class Input{
             MousePosY: 0
         };
         this.mouseButtons = {};
+        this.touchControls = touchControls;
+        this.touchList = {};
+        this.touchEnabled = false;
 
         addEventListener("keydown", (e) => {
             this.keys[e.code] = true;
@@ -75,7 +80,7 @@ export class Input{
                     this.mouseButtons.RClick = true;
                 }
             }
-        })
+        });
 
         addEventListener("mouseup", (e) =>{
             if(e.button == 0){
@@ -85,19 +90,19 @@ export class Input{
             }else if(e.button == 2){
                 this.mouseButtons.RClick = false;
             }
-        })
+        });
 
         addEventListener("gamepadconnected", (e) => {
             if(e.gamepad.mapping == "standard"){
                 this.gamepad = e.gamepad.index;
             }
-        })
+        });
 
         addEventListener("gamepaddisconnected", (e) => {
             if(this.gamepad == e.gamepad.index){
                 this.gamepad = null;
             }
-        })
+        });
 
         addEventListener("fullscreenchange", (e) => {
             if(document.fullscreenElement){
@@ -105,13 +110,43 @@ export class Input{
             }else{
                 screen.orientation.unlock();
             }
-        })
+        });
 
         addEventListener("touchstart", (e) => {
+            this.touchEnabled = true;
             if(document.fullscreenEnabled && !document.fullscreenElement){
                 document.body.requestFullscreen();
+            }else{
+                for(let i = 0; i < e.changedTouches.length; i++){
+                    let touch = e.changedTouches[i];
+                    this.touchList[touch.identifier] = {
+                        x: touch.clientX,
+                        y: touch.clientY,
+                        startX: touch.clientX,
+                        startY: touch.clientY,
+                        force: touch.force
+                    };
+                }
             }
-        })
+        });
+
+        addEventListener("touchmove", (e) => {
+            for(let i = 0; i < e.changedTouches.length; i++){
+                let touch = e.changedTouches[i];
+                if(this.touchList[touch.identifier]){
+                    this.touchList[touch.identifier].x = touch.clientX;
+                    this.touchList[touch.identifier].y = touch.clientY;
+                    this.touchList[touch.identifier].force = touch.force;
+                }
+            }
+        });
+
+        addEventListener("touchend", (e) => {
+            for(let i = 0; i < e.changedTouches.length; i++){
+                let touch = e.changedTouches[i];
+                delete this.touchList[touch.identifier];
+            }
+        });
     }
 
     update(){
@@ -163,6 +198,24 @@ export class Input{
         for(let [k,v] of Object.entries(this.keys)){
             if(this.mapping[k]){
                 this[this.mapping[k]] = v && 1 || this[this.mapping[k]];
+            }
+        }
+
+        for(let i = 0; i < this.touchControls.buttons.length; i++){
+            let button = this.touchControls.buttons[i];
+            if(button.touchID){
+                if(!this.touchList[button.touchID]){
+                    button.touchID = null;
+                }else{
+                    this[button.input] = 1;
+                }
+            }else{
+                for(let [id, touch] of Object.entries(this.touchList)){
+                    if(button.pressed(touch.startX, touch.startY)){
+                        button.touchID = id;
+                        this[button.input] = 1;
+                    }
+                }
             }
         }
     }
