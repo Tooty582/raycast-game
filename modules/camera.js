@@ -39,7 +39,7 @@ function mapCollision(map, nextPos, cam){
             }
 
             cam.forward = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), cam.forward);
-            cam.right = new Vector2(cam.forward.y, -cam.forward.x);
+            cam.right = new Vector2(-cam.forward.y, cam.forward.x);
             returnPos = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), returnPos.subtract(portalPos));
             returnPos = returnPos.add(linkedPortalPos);
         }
@@ -126,7 +126,7 @@ export class Camera{
     constructor(pos, dir, input){
         this.pos = pos;
         this.forward = dir;
-        this.right = new Vector2(this.forward.y, -this.forward.x);
+        this.right = new Vector2(-this.forward.y, this.forward.x);
         this.input = input;
     }
 
