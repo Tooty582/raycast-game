@@ -124,8 +124,7 @@ export class Input{
                         x: touch.clientX,
                         y: touch.clientY,
                         startX: touch.clientX,
-                        startY: touch.clientY,
-                        force: touch.force
+                        startY: touch.clientY
                     };
                 }
             }
@@ -137,7 +136,6 @@ export class Input{
                 if(this.touchList[touch.identifier]){
                     this.touchList[touch.identifier].x = touch.clientX;
                     this.touchList[touch.identifier].y = touch.clientY;
-                    this.touchList[touch.identifier].force = touch.force;
                 }
             }
         });
@@ -213,9 +211,54 @@ export class Input{
                 }
             }else{
                 for(let [id, touch] of Object.entries(this.touchList)){
-                    if(button.pressed(touch.startX, touch.startY)){
+                    if(!touch.control && button.pressed(touch.startX, touch.startY)){
                         button.touchID = id;
                         this[button.input] = 1;
+                        touch.control = button;
+                    }
+                }
+            }
+        }
+
+        for(let i = 0; i < this.touchControls.trackFields.length; i++){
+            let trackField = this.touchControls.trackFields[i];
+            if(trackField.touchID){
+                let touch = this.touchList[trackField.touchID]
+                if(!touch){
+                    trackField.touchID = null;
+                }else{
+                    let xDiff = touch.x - trackField.lastX;
+                    let yDiff = touch.y - trackField.lastY;
+                    trackField.lastX = touch.x;
+                    trackField.lastY = touch.y;
+
+                    if(xDiff >= 0){
+                        if(trackField.posXInput){
+                            this[trackField.posXInput] = Math.max(this[trackField.posXInput], xDiff * (trackField.posXScale || 1));
+                        }
+                    }else{
+                        if(trackField.negXInput){
+                            this[trackField.negXInput] = Math.max(this[trackField.negXInput], -xDiff * (trackField.negXScale || 1));
+                        }
+                    }
+
+                    if(yDiff >= 0){
+                        if(trackField.posYInput){
+                            this[trackField.posYInput] = Math.max(this[trackField.posYInput], yDiff * (trackField.posYScale || 1));
+                        }
+                    }else{
+                        if(trackField.negYInput){
+                            this[trackField.negYInput] = Math.max(this[trackField.negYInput], -yDiff * (trackField.negYScale || 1));
+                        }
+                    }
+                }
+            }else{
+                for(let [id, touch] of Object.entries(this.touchList)){
+                    if(!touch.control && trackField.pressed(touch.startX, touch.startY)){
+                        trackField.touchID = id;
+                        trackField.lastX = touch.startX;
+                        trackField.lastY = touch.startY;
+                        touch.control = trackField;
                     }
                 }
             }
