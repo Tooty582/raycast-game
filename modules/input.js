@@ -220,6 +220,65 @@ export class Input{
             }
         }
 
+        for(let i = 0; i < this.touchControls.joysticks.length; i++){
+            let joystick = this.touchControls.joysticks[i];
+            if(joystick.touchID){
+                let touch = this.touchList[joystick.touchID]
+                if(!touch){
+                    joystick.touchID = null;
+                    joystick.touchX = null;
+                    joystick.touchY = null;
+                }else{
+                    let scale = window.innerWidth;
+                    let xDiff = touch.x - joystick.x * scale;
+                    let yDiff = touch.y - joystick.y * scale;
+                    let maxTravel = joystick.stickTravel * scale;
+                    let percent = (xDiff**2 + yDiff**2)**0.5 / maxTravel;
+                    if(percent < joystick.deadZone){
+                        xDiff = 0;
+                        yDiff = 0;
+                    }else if(percent > 1){
+                        xDiff /= percent;
+                        yDiff /= percent;
+                    }
+                    joystick.touchX = joystick.x * scale + xDiff;
+                    joystick.touchY = joystick.y * scale + yDiff;
+
+                    xDiff = joystick.minValue + (joystick.maxValue - joystick.minValue) * xDiff / maxTravel;
+                    yDiff = joystick.minValue + (joystick.maxValue - joystick.minValue) * yDiff / maxTravel;
+
+                    if(xDiff >= 0){
+                        if(joystick.posXInput){
+                            this[joystick.posXInput] = Math.max(this[joystick.posXInput], xDiff * (joystick.posXScale || 1));
+                        }
+                    }else{
+                        if(joystick.negXInput){
+                            this[joystick.negXInput] = Math.max(this[joystick.negXInput], -xDiff * (joystick.negXScale || 1));
+                        }
+                    }
+
+                    if(yDiff >= 0){
+                        if(joystick.posYInput){
+                            this[joystick.posYInput] = Math.max(this[joystick.posYInput], yDiff * (joystick.posYScale || 1));
+                        }
+                    }else{
+                        if(joystick.negYInput){
+                            this[joystick.negYInput] = Math.max(this[joystick.negYInput], -yDiff * (joystick.negYScale || 1));
+                        }
+                    }
+                }
+            }else{
+                for(let [id, touch] of Object.entries(this.touchList)){
+                    if(!touch.control && joystick.pressed(touch.startX, touch.startY)){
+                        joystick.touchID = id;
+                        joystick.touchX = touch.x;
+                        joystick.touchY = touch.y;
+                        touch.control = joystick;
+                    }
+                }
+            }
+        }
+
         for(let i = 0; i < this.touchControls.trackFields.length; i++){
             let trackField = this.touchControls.trackFields[i];
             if(trackField.touchID){
