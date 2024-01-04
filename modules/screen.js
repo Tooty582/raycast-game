@@ -1,11 +1,20 @@
 import { Vector2 } from "./vector2.js";
 import { Sprite } from "./sprite.js";
+import { CanvasImage } from "./canvas_image.js";
 
 function modulus(n, m){
     return (n % m + m) % m
 }
 
-function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, queueNum){
+function getSkyboxPixel(map, x, y, width, height, fov, ang){
+    if(map.wrappingSkybox){
+        return map.skybox.getPixel(modulus(Math.floor(ang / 2 / Math.PI * map.skybox.width), map.skybox.width), Math.floor(y * map.skybox.height / height));
+    }else{
+        return map.skybox.getPixel(Math.floor(x * map.skybox.width / width), Math.floor(y * map.skybox.height / height));
+    }
+}
+
+function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQueue, queueNum){
     let hitEntry = hitQueue[queueNum];
     let posX = hitEntry.posX;
     let posY = hitEntry.posY;
@@ -15,6 +24,18 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
     let hitRight = hitEntry.hitRight;
     let camPos = hitEntry.camPos;
     let camForward = hitEntry.camForward;
+    let ang = Math.atan2(dir.y, dir.x);
+
+    let fogColor = map.fogColor;
+    if(!fogColor){
+        if(typeof(map.skybox) == "number"){
+            fogColor = map.skybox;
+        }else if(map.skybox instanceof CanvasImage){
+            fogColor = getSkyboxPixel(map, x, y, width, height, fov, ang);
+        }else{
+            color = 0;
+        }
+    }
 
     let dist = curPos.subtract(camPos).length();
     dist = dist * camForward.dot(dir);
@@ -75,7 +96,7 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
                 g -= g % 1;
                 b -= b % 1;
             }else if(portal.linkedPortal){
-                drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, queueNum + 1);
+                drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQueue, queueNum + 1);
                 return;
             }
         }
@@ -88,9 +109,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
         if(fogNum > 1) fogNum = 1;
         if(fogNum < 0) fogNum = 0;
 
-        image[(y * width + x) * 4] = r * (1 - fogNum) + ((map.fogColor >> 24) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((map.fogColor >> 16) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((map.fogColor >> 8) & 0xFF) * fogNum;
+        image[(y * width + x) * 4] = r * (1 - fogNum) + ((fogColor >> 24) & 0xFF) * fogNum;
+        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((fogColor >> 16) & 0xFF) * fogNum;
+        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((fogColor >> 8) & 0xFF) * fogNum;
         image[(y * width + x) * 4 + 3] = 255;
     }else if(y > height / 2){
         let dist = (width * renderHeight - 1) / (y - height / 2);
@@ -109,7 +130,15 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
 
         let color = 0
 
-        if(typeof(floor) == "number"){
+        if(!floor){
+            if(map.skybox){
+                if(typeof(map.skybox) == "number"){
+                    color = map.skybox;
+                }else if(map.skybox instanceof CanvasImage){
+                    color = getSkyboxPixel(map, x, y, width, height, fov, ang);
+                }
+            }
+        }else if(typeof(floor) == "number"){
             color = floor;
         }else if(typeof(floor) == "function"){
             color = floor(floorX, floorY);
@@ -133,9 +162,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
         if(fogNum > 1) fogNum = 1;
         if(fogNum < 0) fogNum = 0;
 
-        image[(y * width + x) * 4] = r * (1 - fogNum) + ((map.fogColor >> 24) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((map.fogColor >> 16) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((map.fogColor >> 8) & 0xFF) * fogNum;
+        image[(y * width + x) * 4] = r * (1 - fogNum) + ((fogColor >> 24) & 0xFF) * fogNum;
+        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((fogColor >> 16) & 0xFF) * fogNum;
+        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((fogColor >> 8) & 0xFF) * fogNum;
         image[(y * width + x) * 4 + 3] = 255;
     }else{
         let dist = width * (1 - renderHeight) / (height / 2 - y);
@@ -154,7 +183,15 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
 
         let color = 0
 
-        if(typeof(ceil) == "number"){
+        if(!ceil){
+            if(map.skybox){
+                if(typeof(map.skybox) == "number"){
+                    color = map.skybox;
+                }else if(map.skybox instanceof CanvasImage){
+                    color = getSkyboxPixel(map, x, y, width, height, fov, ang);
+                }
+            }
+        }else if(typeof(ceil) == "number"){
             color = ceil;
         }else if(typeof(ceil) == "function"){
             color = ceil(ceilX, ceilY);
@@ -178,9 +215,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, q
         if(fogNum > 1) fogNum = 1;
         if(fogNum < 0) fogNum = 0;
 
-        image[(y * width + x) * 4] = r * (1 - fogNum) + ((map.fogColor >> 24) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((map.fogColor >> 16) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((map.fogColor >> 8) & 0xFF) * fogNum;
+        image[(y * width + x) * 4] = r * (1 - fogNum) + ((fogColor >> 24) & 0xFF) * fogNum;
+        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((fogColor >> 16) & 0xFF) * fogNum;
+        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((fogColor >> 8) & 0xFF) * fogNum;
         image[(y * width + x) * 4 + 3] = 255;
     }
 }
@@ -303,7 +340,7 @@ export class Screen{
             }
 
             for(let y = 0; y < height; y++){
-                drawMapPixel(image, x, y, width, height, map, renderHeight, hitQueue, 0);
+                drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQueue, 0);
             }
         }
 
