@@ -6,21 +6,21 @@ export class CanvasImage{
         this.imageData = this.context.getImageData(0, 0, 1, 1);
         this.width = 1;
         this.height = 1;
-        let image = new Image();
+        this.image = new Image();
         let canvasImage = this;
-        image.addEventListener("load", function(){
-            canvasImage.canvas.width = image.naturalWidth;
-            canvasImage.canvas.height = image.naturalHeight;
+        this.image.addEventListener("load", function(){
+            canvasImage.canvas.width = canvasImage.image.naturalWidth;
+            canvasImage.canvas.height = canvasImage.image.naturalHeight;
             canvasImage.width = canvasImage.canvas.width;
             canvasImage.height = canvasImage.canvas.height;
-            canvasImage.context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+            canvasImage.context.drawImage(canvasImage.image, 0, 0, canvasImage.image.naturalWidth, canvasImage.image.naturalHeight);
             canvasImage.imageData = canvasImage.context.getImageData(0, 0, canvasImage.width, canvasImage.height);
         });
-        image.src = url;
+        this.image.src = url;
     }
 
     getPixel(x, y){
-        let imageOffset = (y * this.canvas.width + x) * 4;
+        let imageOffset = (y * this.width + x) * 4;
         let r = this.imageData.data[imageOffset];
         let g = this.imageData.data[imageOffset + 1];
         let b = this.imageData.data[imageOffset + 2];

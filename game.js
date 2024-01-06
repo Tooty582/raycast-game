@@ -2,7 +2,6 @@ import { Camera } from "./modules/camera.js";
 import { CanvasImage } from "./modules/canvas_image.js";
 import { Input } from "./modules/input.js";
 import { Screen } from "./modules/screen.js";
-import { Spritesheet } from "./modules/spritesheet.js";
 import { TouchControls } from "./modules/touch_controls.js";
 import { Vector2 } from "./modules/vector2.js";
 
@@ -14,7 +13,6 @@ canvas.height = 240;
 let context = canvas.getContext("2d");
 context.imageSmoothingEnabled = false;
 
-let spritesheet = new Spritesheet(64, 2);
 let map = {};
 map.walls = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -119,9 +117,9 @@ map.ceils = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-let crateSprite = spritesheet.addImage("./assets/crate.png", "crate");
-let grassSprite = spritesheet.addImage("./assets/grass.png", "grass")
-let portalSprite = spritesheet.addImage("./assets/portal.png", "portal");
+let crateSprite = new CanvasImage("./assets/crate.png");
+let grassSprite = new CanvasImage("./assets/grass.png");
+let portalSprite = new CanvasImage("./assets/portal.png");
 
 map.wall1 = crateSprite;
 map.floor1 = grassSprite;

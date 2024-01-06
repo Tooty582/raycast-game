@@ -1,5 +1,4 @@
 import { Vector2 } from "./vector2.js";
-import { Sprite } from "./sprite.js";
 import { CanvasImage } from "./canvas_image.js";
 
 function modulus(n, m){
@@ -55,9 +54,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
             color = wall;
         }else if(typeof(wall) == "function"){
             color = wall(wallX, wallY);
-        }else if(wall instanceof Sprite){
-            let pixelX = wall.spriteSize * wallX;
-            let pixelY = wall.spriteSize * wallY;
+        }else if(wall instanceof CanvasImage){
+            let pixelX = wall.width * wallX;
+            let pixelY = wall.height * wallY;
             pixelX -= pixelX % 1;
             pixelY -= pixelY % 1;
             color = wall.getPixel(pixelX, pixelY);
@@ -94,8 +93,8 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
 
         let portal = map.portals[posX + " " + posY];
         if(portal && portal.normal.equals(hitNorm)){
-            let pixelX = portal.sprite.spriteSize * wallX;
-            let pixelY = portal.sprite.spriteSize * wallY;
+            let pixelX = portal.sprite.width * wallX;
+            let pixelY = portal.sprite.height * wallY;
             pixelX -= pixelX % 1;
             pixelY -= pixelY % 1;
             let portalColor = portal.sprite.getPixel(pixelX, pixelY);
@@ -164,9 +163,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
             color = floor;
         }else if(typeof(floor) == "function"){
             color = floor(floorX, floorY);
-        }else if(floor instanceof Sprite){
-            let pixelX = floor.spriteSize * floorX;
-            let pixelY = floor.spriteSize * floorY;
+        }else if(floor instanceof CanvasImage){
+            let pixelX = floor.width * floorX;
+            let pixelY = floor.height * floorY;
             pixelX -= pixelX % 1;
             pixelY -= pixelY % 1;
             color = floor.getPixel(pixelX, pixelY);
@@ -222,9 +221,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
             color = ceil;
         }else if(typeof(ceil) == "function"){
             color = ceil(ceilX, ceilY);
-        }else if(ceil instanceof Sprite){
-            let pixelX = ceil.spriteSize * ceilX;
-            let pixelY = ceil.spriteSize * ceilY;
+        }else if(ceil instanceof CanvasImage){
+            let pixelX = ceil.width * ceilX;
+            let pixelY = ceil.height * ceilY;
             pixelX -= pixelX % 1;
             pixelY -= pixelY % 1;
             color = ceil.getPixel(pixelX, pixelY);
