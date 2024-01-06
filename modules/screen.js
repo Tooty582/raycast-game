@@ -154,9 +154,11 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
         let g = ((color >> 16) & 0xFF);
         let b = ((color >> 8) & 0xFF);
 
-        r *= (map.floorShade || 1);
-        g *= (map.floorShade || 1);
-        b *= (map.floorShade || 1);
+        if(floor){
+            r *= (map.floorShade || 1);
+            g *= (map.floorShade || 1);
+            b *= (map.floorShade || 1);
+        }
 
         let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
         if(fogNum > 1) fogNum = 1;
@@ -207,9 +209,11 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
         let g = ((color >> 16) & 0xFF);
         let b = ((color >> 8) & 0xFF);
 
-        r *= (map.ceilShade || 1);
-        g *= (map.ceilShade || 1);
-        b *= (map.ceilShade || 1);
+        if(ceil){
+            r *= (map.ceilShade || 1);
+            g *= (map.ceilShade || 1);
+            b *= (map.ceilShade || 1);
+        }
 
         let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
         if(fogNum > 1) fogNum = 1;
