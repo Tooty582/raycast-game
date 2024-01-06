@@ -41,7 +41,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
     dist = dist * camForward.dot(dir);
     let wallHeight = width / dist;
     let start = height / 2 - wallHeight * (1 - renderHeight);
-    let wall = map["wall" + map.walls[posX][posY]];
+    let wall;
+
+    if(map.walls[posX] && map.walls[posX][posY])wall = map["wall" + map.walls[posX][posY]];
 
     if(y >= start && y < start + wallHeight){
         let wallY = (y - start) / wallHeight;
@@ -59,6 +61,8 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
             pixelX -= pixelX % 1;
             pixelY -= pixelY % 1;
             color = wall.getPixel(pixelX, pixelY);
+        }else{
+            color = getSkyboxPixel(map, x, y, width, height, fov, ang);
         }
 
         let wallShade = 1;
@@ -76,6 +80,9 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
             darkShadeR = (map.wallDarkShade >> 24) & 0xFF;
             darkShadeG = (map.wallDarkShade >> 16) & 0xFF;
             darkShadeB = (map.wallDarkShade >> 8) & 0xFF;
+        }
+
+        if(map.wallLightShade){
             lightShadeR = (map.wallLightShade >> 24) & 0xFF;
             lightShadeG = (map.wallLightShade >> 16) & 0xFF;
             lightShadeB = (map.wallLightShade >> 8) & 0xFF;
@@ -114,9 +121,11 @@ function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQue
             }
         }
         
-        r *= (darkShadeR + (lightShadeR - darkShadeR) * wallShade) / 0xFF;
-        g *= (darkShadeG + (lightShadeG - darkShadeG) * wallShade) / 0xFF;
-        b *= (darkShadeB + (lightShadeB - darkShadeB) * wallShade) / 0xFF;
+        if(wall){
+            r *= (darkShadeR + (lightShadeR - darkShadeR) * wallShade) / 0xFF;
+            g *= (darkShadeG + (lightShadeG - darkShadeG) * wallShade) / 0xFF;
+            b *= (darkShadeB + (lightShadeB - darkShadeB) * wallShade) / 0xFF;
+        }
 
         let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
         if(fogNum > 1) fogNum = 1;
@@ -264,7 +273,7 @@ export class Screen{
             let camForward = camera.forward;
             let hitQueue = [];
 
-            while(map.walls[posX][posY] == 0 && camPos.subtract(curPos).length() * camForward.dot(dir) < map.fogFar){
+            while(map.walls[posX] && map.walls[posX][posY] == 0 && camPos.subtract(curPos).length() * camForward.dot(dir) < map.fogFar){
                 let stepX = 0;
                 let stepY = 0;
                 let nextX = null;
@@ -298,6 +307,8 @@ export class Screen{
                 }
 
                 hitRight = new Vector2(hitNorm.y, -hitNorm.x);
+
+                if(posX < 0 || posY < 0 || posX >= map.walls.length || posY >= map.walls[posX].length) break;
 
                 let portal = map.portals[posX + " " + posY];
                 if(map.walls[posX][posY] != 0 && portal && portal.linkedPortal){

@@ -7,7 +7,7 @@ function mapCollision(map, nextPos, cam){
     let mapY = nextPos.y - remY;
     let returnPos = nextPos.clone();
 
-    if(map.walls[mapX][mapY] != 0){
+    if(!map.walls[mapX] || map.walls[mapX][mapY] == undefined || map.walls[mapX][mapY] != 0){
         let portal = map.portals[mapX + " " + mapY]
 
         if(portal && portal.linkedPortal){
@@ -62,7 +62,7 @@ function mapCollision(map, nextPos, cam){
     }
 
     let xHit = false;
-    if(xDir != 0 && map.walls[mapX + xDir][mapY] != 0){
+    if(xDir != 0 && (!map.walls[mapX + xDir] || map.walls[mapX + xDir][mapY] != 0)){
         let portal = map.portals[(mapX + xDir) + " " + mapY]
         if(!portal || portal.normal.x != -xDir || !portal.linkedPortal || yDir){
             if(xDir < 0){
@@ -76,7 +76,7 @@ function mapCollision(map, nextPos, cam){
     }
 
     let yHit = false;
-    if(yDir != 0 && map.walls[mapX][mapY + yDir] != 0){
+    if(yDir != 0 && (!map.walls[mapX] || map.walls[mapX][mapY + yDir] != 0)){
         let portal = map.portals[mapX + " " + (mapY + yDir)]
         if(!portal || portal.normal.y != -yDir || !portal.linkedPortal || xDir){
             if(yDir < 0){
@@ -89,7 +89,7 @@ function mapCollision(map, nextPos, cam){
         }
     }
 
-    if(!xHit && !yHit && xDir != 0 && yDir != 0 && map.walls[mapX + xDir][mapY + yDir] != 0){
+    if(!xHit && !yHit && xDir != 0 && yDir != 0 && (!map.walls[mapX + xDir] || map.walls[mapX + xDir][mapY + yDir] != 0)){
         let xDist = remX;
         if(xDir > 0){
             xDist = 1 - remX;
