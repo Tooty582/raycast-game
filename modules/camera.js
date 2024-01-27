@@ -8,11 +8,17 @@ function mapCollision(map, nextPos, cam){
     let returnPos = nextPos.clone();
 
     if(!map.walls[mapX] || map.walls[mapX][mapY] == undefined || map.walls[mapX][mapY] != 0){
-        let portal = map.portals[mapX + " " + mapY]
+        let portal;
 
-        if(portal && portal.linkedPortal){
-            let linkedPortal = portal.linkedPortal;
-            let portalPos = new Vector2(portal.posX, portal.posY);
+        for(let thisPortal of map.portals){
+            if(thisPortal.pos.x == mapX && thisPortal.pos.y == mapY){
+                portal = thisPortal;
+                break;
+            }
+        }
+
+        if(portal){
+            let portalPos = portal.pos.clone();
             if(portal.normal.x == 0){
                 portalPos.x += 0.5;
                 if(portal.normal.y > 0){
@@ -25,22 +31,22 @@ function mapCollision(map, nextPos, cam){
                 }
             }
 
-            let linkedPortalPos = new Vector2(linkedPortal.posX + linkedPortal.normal.x, linkedPortal.posY + linkedPortal.normal.y);
-            if(linkedPortal.normal.x == 0){
+            let linkedPortalPos = portal.outPos.add(portal.outNormal);
+            if(portal.outNormal.x == 0){
                 linkedPortalPos.x += 0.5;
-                if(linkedPortal.normal.y < 0){
+                if(portal.outNormal.y < 0){
                     linkedPortalPos.y += 1;
                 }
             }else{
                 linkedPortalPos.y += 0.5;
-                if(linkedPortal.normal.x < 0){
+                if(portal.outNormal.x < 0){
                     linkedPortalPos.x += 1;
                 }
             }
 
-            cam.forward = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), cam.forward);
+            cam.forward = Vector2.localToLocal(portal.normal, portal.outNormal.multiply(-1), cam.forward);
             cam.right = new Vector2(-cam.forward.y, cam.forward.x);
-            returnPos = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), returnPos.subtract(portalPos));
+            returnPos = Vector2.localToLocal(portal.normal, portal.outNormal.multiply(-1), returnPos.subtract(portalPos));
             returnPos = returnPos.add(linkedPortalPos);
         }
 
@@ -63,8 +69,16 @@ function mapCollision(map, nextPos, cam){
 
     let xHit = false;
     if(xDir != 0 && (!map.walls[mapX + xDir] || map.walls[mapX + xDir][mapY] != 0)){
-        let portal = map.portals[(mapX + xDir) + " " + mapY]
-        if(!portal || portal.normal.x != -xDir || !portal.linkedPortal || yDir){
+        let portal;
+
+        for(let thisPortal of map.portals){
+            if(thisPortal.pos.x == mapX + xDir && thisPortal.pos.y == mapY){
+                portal = thisPortal;
+                break;
+            }
+        }
+
+        if(!portal || portal.normal.x != -xDir || yDir){
             if(xDir < 0){
                 returnPos.x = mapX + Camera.COLLISION_HULL;
             }else{
@@ -77,8 +91,16 @@ function mapCollision(map, nextPos, cam){
 
     let yHit = false;
     if(yDir != 0 && (!map.walls[mapX] || map.walls[mapX][mapY + yDir] != 0)){
-        let portal = map.portals[mapX + " " + (mapY + yDir)]
-        if(!portal || portal.normal.y != -yDir || !portal.linkedPortal || xDir){
+        let portal;
+
+        for(let thisPortal of map.portals){
+            if(thisPortal.pos.x == mapX && thisPortal.pos.y == mapY + yDir){
+                portal = thisPortal;
+                break;
+            }
+        }
+
+        if(!portal || portal.normal.y != -yDir || xDir){
             if(yDir < 0){
                 returnPos.y = mapY + Camera.COLLISION_HULL;
             }else{

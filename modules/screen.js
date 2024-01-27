@@ -1,382 +1,226 @@
 import { Vector2 } from "./vector2.js";
-import { CanvasImage } from "./canvas_image.js";
 
-function modulus(n, m){
-    return (n % m + m) % m
-}
+function initShaderProgram(gl, vsSource, fsSource) {
+    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
-function getSkyboxPixel(map, x, y, width, height, fov, ang){
-    if(map.wrappingSkybox){
-        return map.skybox.getPixel(modulus(Math.floor(ang / 2 / Math.PI * map.skybox.width), map.skybox.width), Math.floor(y * map.skybox.height / height));
-    }else{
-        return map.skybox.getPixel(Math.floor(x * map.skybox.width / width), Math.floor(y * map.skybox.height / height));
-    }
-}
+    const shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
 
-function drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQueue, queueNum){
-    let hitEntry = hitQueue[queueNum];
-    let posX = hitEntry.posX;
-    let posY = hitEntry.posY;
-    let curPos = hitEntry.curPos;
-    let dir = hitEntry.dir;
-    let hitNorm = hitEntry.hitNorm;
-    let hitRight = hitEntry.hitRight;
-    let camPos = hitEntry.camPos;
-    let camForward = hitEntry.camForward;
-    let ang = Math.atan2(dir.y, dir.x);
-
-    let fogColor = map.fogColor;
-    if(!fogColor){
-        if(typeof(map.skybox) == "number"){
-            fogColor = map.skybox;
-        }else if(map.skybox instanceof CanvasImage){
-            fogColor = getSkyboxPixel(map, x, y, width, height, fov, ang);
-        }else{
-            color = 0;
-        }
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert(
+            `Unable to initialize the shader program: ${gl.getProgramInfoLog(
+                shaderProgram,
+            )}`,
+        );
+        return null;
     }
 
-    let dist = curPos.subtract(camPos).length();
-    dist = dist * camForward.dot(dir);
-    let wallHeight = width / dist;
-    let start = height / 2 - wallHeight * (1 - renderHeight);
-    let wall;
-
-    if(map.walls[posX] && map.walls[posX][posY])wall = map["wall" + map.walls[posX][posY]];
-
-    if(y >= start && y < start + wallHeight){
-        let wallY = (y - start) / wallHeight;
-        let wallX = modulus(curPos.dot(hitRight), 1);
-        
-        let color = 0;
-
-        if(typeof(wall) == "number"){
-            color = wall;
-        }else if(typeof(wall) == "function"){
-            color = wall(wallX, wallY);
-        }else if(wall instanceof CanvasImage){
-            let pixelX = wall.width * wallX;
-            let pixelY = wall.height * wallY;
-            pixelX -= pixelX % 1;
-            pixelY -= pixelY % 1;
-            color = wall.getPixel(pixelX, pixelY);
-        }else{
-            color = getSkyboxPixel(map, x, y, width, height, fov, ang);
-        }
-
-        let wallShade = 1;
-        if(map.wallLightVec){
-            wallShade = map.wallLightVec.dot(hitNorm) * -0.5 + 0.5;
-        }
-        let darkShadeR = 0xFF;
-        let darkShadeG = 0xFF;
-        let darkShadeB = 0xFF;
-        let lightShadeR = 0xFF;
-        let lightShadeG = 0xFF;
-        let lightShadeB = 0xFF;
-
-        if(map.wallDarkShade){
-            darkShadeR = (map.wallDarkShade >> 24) & 0xFF;
-            darkShadeG = (map.wallDarkShade >> 16) & 0xFF;
-            darkShadeB = (map.wallDarkShade >> 8) & 0xFF;
-        }
-
-        if(map.wallLightShade){
-            lightShadeR = (map.wallLightShade >> 24) & 0xFF;
-            lightShadeG = (map.wallLightShade >> 16) & 0xFF;
-            lightShadeB = (map.wallLightShade >> 8) & 0xFF;
-        }
-
-        let r = (color >> 24) & 0xFF;
-        let g = (color >> 16) & 0xFF;
-        let b = (color >> 8) & 0xFF;
-
-        let portal = map.portals[posX + " " + posY];
-        if(portal && portal.normal.equals(hitNorm)){
-            let pixelX = portal.sprite.width * wallX;
-            let pixelY = portal.sprite.height * wallY;
-            pixelX -= pixelX % 1;
-            pixelY -= pixelY % 1;
-            let portalColor = portal.sprite.getPixel(pixelX, pixelY);
-            if(portalColor != portal.maskColor){
-                let portalR = (portalColor >> 24) & 0xFF;
-                let portalG = (portalColor >> 16) & 0xFF;
-                let portalB = (portalColor >> 8) & 0xFF;
-                let portalA = (portalColor & 0xFF) / 255;
-                
-                let modPortalA = -0.56 / (portalA - 1.4) - 0.4;
-                portalA = portalA + (modPortalA - portalA) * (Math.cos(Date.now() / 1000 * 2 * Math.PI) + 1) / 2;
-
-                r = portalR * portalA + r * (1 - portalA);
-                g = portalG * portalA + g * (1 - portalA);
-                b = portalB * portalA + b * (1 - portalA);
-
-                r -= r % 1;
-                g -= g % 1;
-                b -= b % 1;
-            }else if(portal.linkedPortal){
-                drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQueue, queueNum + 1);
-                return;
-            }
-        }
-        
-        if(wall){
-            r *= (darkShadeR + (lightShadeR - darkShadeR) * wallShade) / 0xFF;
-            g *= (darkShadeG + (lightShadeG - darkShadeG) * wallShade) / 0xFF;
-            b *= (darkShadeB + (lightShadeB - darkShadeB) * wallShade) / 0xFF;
-        }
-
-        let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
-        if(fogNum > 1) fogNum = 1;
-        if(fogNum < 0) fogNum = 0;
-
-        image[(y * width + x) * 4] = r * (1 - fogNum) + ((fogColor >> 24) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((fogColor >> 16) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((fogColor >> 8) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 3] = 255;
-    }else if(y > height / 2){
-        let dist = (width * renderHeight - 1) / (y - height / 2);
-        let floorPos = camPos.add(dir.multiply(dist / camForward.dot(dir)));
-        let floorX = floorPos.x % 1;
-        let floorY = floorPos.y % 1;
-        let floorXRow = map.floors[floorPos.x - floorX];
-        let floor = null;
-
-        if(floorXRow){
-            let floorNum = floorXRow[floorPos.y - floorY]
-            if(floorNum){
-                floor = map["floor" + floorNum]
-            }
-        }
-
-        let color = 0
-
-        if(!floor){
-            if(map.skybox){
-                if(typeof(map.skybox) == "number"){
-                    color = map.skybox;
-                }else if(map.skybox instanceof CanvasImage){
-                    color = getSkyboxPixel(map, x, y, width, height, fov, ang);
-                }
-            }
-        }else if(typeof(floor) == "number"){
-            color = floor;
-        }else if(typeof(floor) == "function"){
-            color = floor(floorX, floorY);
-        }else if(floor instanceof CanvasImage){
-            let pixelX = floor.width * floorX;
-            let pixelY = floor.height * floorY;
-            pixelX -= pixelX % 1;
-            pixelY -= pixelY % 1;
-            color = floor.getPixel(pixelX, pixelY);
-        }
-
-        let r = ((color >> 24) & 0xFF);
-        let g = ((color >> 16) & 0xFF);
-        let b = ((color >> 8) & 0xFF);
-
-        if(floor && map.floorShade != undefined){
-            let shadeR = (map.floorShade >> 24) & 0xFF;
-            let shadeG = (map.floorShade >> 16) & 0xFF;
-            let shadeB = (map.floorShade >> 8) & 0xFF;
-            r *= shadeR / 0xFF;
-            g *= shadeG / 0xFF;
-            b *= shadeB / 0xFF;
-        }
-
-        let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
-        if(fogNum > 1) fogNum = 1;
-        if(fogNum < 0) fogNum = 0;
-
-        image[(y * width + x) * 4] = r * (1 - fogNum) + ((fogColor >> 24) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((fogColor >> 16) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((fogColor >> 8) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 3] = 255;
-    }else{
-        let dist = width * (1 - renderHeight) / (height / 2 - y);
-        let ceilPos = camPos.add(dir.multiply(dist / camForward.dot(dir)));
-        let ceilX = ceilPos.x % 1;
-        let ceilY = ceilPos.y % 1;
-        let ceilXRow = map.ceils[ceilPos.x - ceilX];
-        let ceil = null;
-        
-        if(ceilXRow){
-            let ceilNum = ceilXRow[ceilPos.y - ceilY];
-            if(ceilNum){
-                ceil = map["ceil" + ceilNum]
-            }
-        }
-
-        let color = 0
-
-        if(!ceil){
-            if(map.skybox){
-                if(typeof(map.skybox) == "number"){
-                    color = map.skybox;
-                }else if(map.skybox instanceof CanvasImage){
-                    color = getSkyboxPixel(map, x, y, width, height, fov, ang);
-                }
-            }
-        }else if(typeof(ceil) == "number"){
-            color = ceil;
-        }else if(typeof(ceil) == "function"){
-            color = ceil(ceilX, ceilY);
-        }else if(ceil instanceof CanvasImage){
-            let pixelX = ceil.width * ceilX;
-            let pixelY = ceil.height * ceilY;
-            pixelX -= pixelX % 1;
-            pixelY -= pixelY % 1;
-            color = ceil.getPixel(pixelX, pixelY);
-        }
-
-        let r = ((color >> 24) & 0xFF);
-        let g = ((color >> 16) & 0xFF);
-        let b = ((color >> 8) & 0xFF);
-
-        if(ceil && map.ceilShade != undefined){
-            let shadeR = (map.ceilShade >> 24) & 0xFF;
-            let shadeG = (map.ceilShade >> 16) & 0xFF;
-            let shadeB = (map.ceilShade >> 8) & 0xFF;
-            r *= shadeR / 0xFF;
-            g *= shadeG / 0xFF;
-            b *= shadeB / 0xFF;
-        }
-
-        let fogNum = (dist - map.fogNear) / (map.fogFar - map.fogNear);
-        if(fogNum > 1) fogNum = 1;
-        if(fogNum < 0) fogNum = 0;
-
-        image[(y * width + x) * 4] = r * (1 - fogNum) + ((fogColor >> 24) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 1] = g * (1 - fogNum) + ((fogColor >> 16) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 2] = b * (1 - fogNum) + ((fogColor >> 8) & 0xFF) * fogNum;
-        image[(y * width + x) * 4 + 3] = 255;
-    }
+    return shaderProgram;
 }
+
+function loadShader(gl, type, source) {
+    const shader = gl.createShader(type);
+
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert(
+            `An error occurred compiling the shaders: ${gl.getShaderInfoLog(shader)}`,
+        );
+        gl.deleteShader(shader);
+        return null;
+    }
+
+    return shader;
+}
+
+function initBuffers(gl) {
+    const positionBuffer = initPositionBuffer(gl);
+
+    return {
+        position: positionBuffer,
+    };
+}
+  
+function initPositionBuffer(gl) {
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    return positionBuffer;
+}
+  
+function setPositionAttribute(gl, buffers, programInfo) {
+    const numComponents = 2;
+    const type = gl.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+    gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexPos,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset,
+    );
+    gl.enableVertexAttribArray(programInfo.attribLocations.vertexPos);
+}
+
+function loadTextureArray(gl, src, width, height, imageFormat, dataFormat, index){
+    gl.activeTexture(gl["TEXTURE" + index]);
+    let texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, imageFormat, width, height, 0, imageFormat, dataFormat, src);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+}
+
+function loadTexture(gl, src, index){
+    gl.activeTexture(gl["TEXTURE" + index]);
+    let texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+}
+
+function texifyMap(map){
+    let result = [];
+    for(let y = 0; y < map.walls[0].length; y++){
+        for(let x = 0; x < map.walls.length; x++){
+            let i = y * map.walls.length + x;
+            result[i * 3] = map.walls[x][y];
+            result[i * 3 + 1] = map.floors[x][y];
+            result[i * 3 + 2] = map.ceils[x][y];
+        }
+    }
+    return new Uint8Array(result);
+}
+
+function sendPortalData(gl, portal, index){
+    gl.uniform2f(gl.getUniformLocation(shaderProgram, "portals[" + index + "].pos"), portal.pos.x, portal.pos.y);
+    gl.uniform2f(gl.getUniformLocation(shaderProgram, "portals[" + index + "].normal"), portal.normal.x, portal.normal.y);
+    gl.uniform2f(gl.getUniformLocation(shaderProgram, "portals[" + index + "].outPos"), portal.outPos.x, portal.outPos.y);
+    gl.uniform2f(gl.getUniformLocation(shaderProgram, "portals[" + index + "].outNormal"), portal.outNormal.x, portal.outNormal.y);
+    gl.uniform4f(gl.getUniformLocation(shaderProgram, "portals[" + index + "].maskColor"), ((portal.maskColor >> 24) & 0xFF) / 0xFF, ((portal.maskColor >> 16) & 0xFF) / 0xFF, ((portal.maskColor >> 8) & 0xFF) / 0xFF, (portal.maskColor & 0xFF) / 0xFF);
+    gl.uniform1i(gl.getUniformLocation(shaderProgram, "portals[" + index + "].texture"), portal.texture);
+}
+
+let buffers, shaderProgram, programInfo;
+let imgCount = 2;
 
 export class Screen{
-       static render(context, camera, map, fov, renderHeight){
-        let width = context.canvas.width;
-        let height = context.canvas.height;
+        static async glInit(context, map){
+            let vsCode = await fetch("./modules/shader.vert");
+            vsCode = await vsCode.text();
+            let fsCode = await fetch("./modules/shader.frag");
+            fsCode = await fsCode.text();
+            shaderProgram = initShaderProgram(context, vsCode, fsCode);
 
-        let data = context.createImageData(width, height);
-        let image = data.data;
-
-        for(let x = 0; x < width; x++){
-            let posX = camera.pos.x - camera.pos.x % 1;
-            let posY = camera.pos.y - camera.pos.y % 1;
-            let curPos = camera.pos;
-            let dir = camera.forward.rotate(fov * x / width - fov / 2);
-            let hitNorm = null;
-            let hitRight = null;
-            let camPos = camera.pos;
-            let camForward = camera.forward;
-            let hitQueue = [];
-
-            while(map.walls[posX] && map.walls[posX][posY] == 0 && camPos.subtract(curPos).length() * camForward.dot(dir) < map.fogFar){
-                let stepX = 0;
-                let stepY = 0;
-                let nextX = null;
-                let nextY = null;
-
-                if(dir.x > 0){
-                    stepX = 1;
-                    nextX = dir.multiply((posX + 1 - curPos.x) / dir.x);
-                }else{
-                    stepX = -1;
-                    nextX = dir.multiply((posX - curPos.x) / dir.x);
+            programInfo = {
+                program: shaderProgram,
+                attribLocations: {
+                    vertexPos: context.getAttribLocation(shaderProgram, "vertexPos"),
+                },
+                uniformLocations: {
+                    screenSize: context.getUniformLocation(shaderProgram, "screenSize"),
+                    pTime: context.getUniformLocation(shaderProgram, "pTime"),
+                    fov: context.getUniformLocation(shaderProgram, "fov"),
+                    renderHeight: context.getUniformLocation(shaderProgram, "renderHeight"),
+                    mapWidth: context.getUniformLocation(shaderProgram, "mapWidth"),
+                    mapLength: context.getUniformLocation(shaderProgram, "mapLength"),
+                    map: context.getUniformLocation(shaderProgram, "map"),
+                    skybox: context.getUniformLocation(shaderProgram, "skybox"),
+                    cameraPos: context.getUniformLocation(shaderProgram, "cameraPos"),
+                    cameraDir: context.getUniformLocation(shaderProgram, "cameraDir"),
+                    fogNear: context.getUniformLocation(shaderProgram, "fogNear"),
+                    fogFar: context.getUniformLocation(shaderProgram, "fogFar"),
+                    floorShade: context.getUniformLocation(shaderProgram, "floorShade"),
+                    ceilShade: context.getUniformLocation(shaderProgram, "ceilShade"),
+                    wallLightVec: context.getUniformLocation(shaderProgram, "wallLightVec"),
+                    wallShadeDark: context.getUniformLocation(shaderProgram, "wallShadeDark"),
+                    wallShadeLight: context.getUniformLocation(shaderProgram, "wallShadeLight")
                 }
+            };
 
-                if(dir.y > 0){
-                    stepY = 1;
-                    nextY = dir.multiply((posY + 1 - curPos.y) / dir.y);
-                }else{
-                    stepY = -1;
-                    nextY = dir.multiply((posY - curPos.y) / dir.y);
-                }
+            context.useProgram(shaderProgram);
+            context.uniform1i(programInfo.uniformLocations.mapWidth, map.walls.length);
+            context.uniform1i(programInfo.uniformLocations.mapLength, map.walls[0].length);
+            context.uniform1f(programInfo.uniformLocations.fogNear, map.fogNear);
+            context.uniform1f(programInfo.uniformLocations.fogFar, map.fogFar);
+            context.uniform3f(programInfo.uniformLocations.floorShade, ((map.floorShade >> 16) & 0xFF) / 255, ((map.floorShade >> 8) & 0xFF) / 255, (map.floorShade & 0xFF) / 255);
+            context.uniform3f(programInfo.uniformLocations.ceilShade, ((map.ceilShade >> 16) & 0xFF) / 255, ((map.ceilShade >> 8) & 0xFF) / 255, (map.ceilShade & 0xFF) / 255);
+            context.uniform2f(programInfo.uniformLocations.wallLightVec, map.wallLightVec.x, map.wallLightVec.y);
+            context.uniform3f(programInfo.uniformLocations.wallShadeDark, ((map.wallShadeDark >> 16) & 0xFF) / 255, ((map.wallShadeDark >> 8) & 0xFF) / 255, (map.wallShadeDark & 0xFF) / 255);
+            context.uniform3f(programInfo.uniformLocations.wallShadeLight, ((map.wallShadeLight >> 16) & 0xFF) / 255, ((map.wallShadeLight >> 8) & 0xFF) / 255, (map.wallShadeLight & 0xFF) / 255);
 
-                if(nextX.length() < nextY.length()){
-                    curPos = curPos.add(nextX);
-                    posX += stepX;
-                    hitNorm = new Vector2(1, 0).multiply(-stepX);
-                }else{
-                    curPos = curPos.add(nextY);
-                    posY += stepY;
-                    hitNorm = new Vector2(0, 1).multiply(-stepY);
-
-                }
-
-                hitRight = new Vector2(hitNorm.y, -hitNorm.x);
-
-                if(posX < 0 || posY < 0 || posX >= map.walls.length || posY >= map.walls[posX].length) break;
-
-                let portal = map.portals[posX + " " + posY];
-                if(map.walls[posX][posY] != 0 && portal && portal.linkedPortal){
-                    hitQueue[hitQueue.length] = {
-                        posX: posX,
-                        posY: posY,
-                        curPos: curPos,
-                        dir: dir,
-                        hitNorm: hitNorm,
-                        hitRight: hitRight,
-                        camPos: camPos,
-                        camForward: camForward
-                    }
-
-                    let linkedPortal = portal.linkedPortal;
-                    let portalPos = new Vector2(portal.posX, portal.posY);
-                    if(portal.normal.x == 0){
-                        portalPos.x += 0.5;
-                        if(portal.normal.y > 0){
-                            portalPos.y += 1;
-                        }
-                    }else{
-                        portalPos.y += 0.5;
-                        if(portal.normal.x > 0){
-                            portalPos.x += 1;
-                        }
-                    }
-
-                    posX = linkedPortal.posX + linkedPortal.normal.x;
-                    posY = linkedPortal.posY + linkedPortal.normal.y;
-
-                    let linkedPortalPos = new Vector2(posX, posY);
-                    if(linkedPortal.normal.x == 0){
-                        linkedPortalPos.x += 0.5;
-                        if(linkedPortal.normal.y < 0){
-                            linkedPortalPos.y += 1;
-                        }
-                    }else{
-                        linkedPortalPos.y += 0.5;
-                        if(linkedPortal.normal.x < 0){
-                            linkedPortalPos.x += 1;
-                        }
-                    }
-
-                    curPos = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), curPos.subtract(portalPos));
-                    curPos = curPos.add(linkedPortalPos);
-                    dir = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), dir);
-                    camPos = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), camPos.subtract(portalPos));
-                    camPos = camPos.add(linkedPortalPos);
-                    camForward = Vector2.localToLocal(portal.normal, linkedPortal.normal.multiply(-1), camForward);
-                }
+            for(let i = 0; i < map.portals.length; i++){
+                sendPortalData(context, map.portals[i], i);
             }
 
-            hitQueue[hitQueue.length] = {
-                posX: posX,
-                posY: posY,
-                curPos: curPos,
-                dir: dir,
-                hitNorm: hitNorm,
-                hitRight: hitRight,
-                camPos: camPos,
-                camForward: camForward
-            }
-
-            for(let y = 0; y < height; y++){
-                drawMapPixel(image, x, y, width, height, map, renderHeight, fov, hitQueue, 0);
-            }
+            buffers = initBuffers(context);
+            this.setMap(context, map)
         }
 
-        context.putImageData(data, 0, 0);
-    }
+        static setMap(context, map){
+            loadTextureArray(context, texifyMap(map), map.walls.length, map.walls[0].length, context.RGB, context.UNSIGNED_BYTE, 0);
+            context.uniform1i(programInfo.uniformLocations.map, 0);
+        }
+
+        static async setSkybox(context, src){
+            let img = new Image();
+            img.src = src;
+            await img.decode();
+            loadTexture(context, img, 1);
+            context.uniform1i(programInfo.uniformLocations.skybox, 1);
+        }
+
+        static async addImage(context, src){
+            let img = new Image();
+            img.src = src;
+            await img.decode();
+            let index = imgCount;
+            if(index >= context.getParameter(context.MAX_COMBINED_TEXTURE_IMAGE_UNITS)){
+                alert("Could not add image, max image units is " + context.getParameter(context.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+                return;
+            }
+            loadTexture(context, img, index);
+            context.uniform1i(context.getUniformLocation(shaderProgram, "textures[" + (index - 2) + "]"), index);
+            imgCount = imgCount + 1;
+        }
+
+        static glRender(context, camera, fov, renderHeight){
+            context.clearColor(0.0, 0.0, 0.0, 1.0);
+            context.clear(context.COLOR_BUFFER_BIT);
+
+            setPositionAttribute(context, buffers, programInfo);
+
+            context.useProgram(shaderProgram);
+
+            context.uniform2f(programInfo.uniformLocations.screenSize, context.canvas.width, context.canvas.height);
+            context.uniform1f(programInfo.uniformLocations.pTime, (performance.now()) / 1000);
+            context.uniform1f(programInfo.uniformLocations.fov, fov);
+            context.uniform1f(programInfo.uniformLocations.renderHeight, renderHeight);
+            context.uniform2f(programInfo.uniformLocations.cameraPos, camera.pos.x, camera.pos.y);
+            context.uniform2f(programInfo.uniformLocations.cameraDir, camera.forward.x, camera.forward.y);
+
+            const offset = 0;
+            const vertexCount = 4;
+            context.drawArrays(context.TRIANGLE_STRIP, offset, vertexCount);
+        }
 }

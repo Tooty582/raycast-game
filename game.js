@@ -1,5 +1,4 @@
 import { Camera } from "./modules/camera.js";
-import { CanvasImage } from "./modules/canvas_image.js";
 import { Input } from "./modules/input.js";
 import { Screen } from "./modules/screen.js";
 import { TouchControls } from "./modules/touch_controls.js";
@@ -10,8 +9,13 @@ let displayContext = displayCanvas.getContext("2d");
 let canvas = document.createElement("canvas");
 canvas.width = 320;
 canvas.height = 240;
-let context = canvas.getContext("2d");
+let context = canvas.getContext("webgl");
 context.imageSmoothingEnabled = false;
+let hudCanvas = document.createElement("canvas");
+hudCanvas.width = 320;
+hudCanvas.height = 240;
+let hudContext = hudCanvas.getContext("2d");
+hudContext.imageSmoothingEnabled = false;
 
 let map = {};
 map.walls = [
@@ -49,38 +53,38 @@ map.walls = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
 map.floors = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ];
 map.ceils = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -117,84 +121,73 @@ map.ceils = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-let crateSprite = new CanvasImage("./assets/crate.png");
-let grassSprite = new CanvasImage("./assets/grass.png");
-let portalSprite = new CanvasImage("./assets/portal.png");
-
-map.wall1 = crateSprite;
-map.floor1 = grassSprite;
-map.floor2 = crateSprite;
-map.ceil1 = crateSprite;
-map.floorShade = 0xD0B160FF;
-map.ceilShade = 0x5E595FFF;
+map.floorShade = 0xD0B160;
+map.ceilShade = 0x5E595F;
 map.wallLightVec = new Vector2(0, 1).rotate(Math.PI / 18);
-map.wallLightShade = 0xFCD25FFF;
-map.wallDarkShade = 0x464660FF;
+map.wallShadeDark = 0xFCD25F;
+map.wallShadeLight = 0x464660;
 map.fogNear = 16;
 map.fogFar = 24;
-map.skybox = new CanvasImage("./assets/skybox.png");
 map.wrappingSkybox = true;
-map.portals = {
-    "2 3": {
-        sprite: portalSprite,
+map.portals = [
+    {
+        pos: new Vector2(2, 3),
         normal: new Vector2(1, 0),
+        outPos: new Vector2(29, 3),
+        outNormal: new Vector2(-1, 0),
         maskColor: 0x00FF0001,
-        posX: 2,
-        posY: 3
-    }, "29 3": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(29, 3),
         normal: new Vector2(-1, 0),
+        outPos: new Vector2(2, 3),
+        outNormal: new Vector2(1, 0),
         maskColor: 0x00FF0001,
-        posX: 29,
-        posY: 3
-    },
-    "2 12": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(2, 12),
         normal: new Vector2(1, 0),
+        outPos: new Vector2(29, 12),
+        outNormal: new Vector2(-1, 0),
         maskColor: 0x00FF0001,
-        posX: 2,
-        posY: 12
-    }, "29 12": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(29, 12),
         normal: new Vector2(-1, 0),
+        outPos: new Vector2(2, 12),
+        outNormal: new Vector2(1, 0),
         maskColor: 0x00FF0001,
-        posX: 29,
-        posY: 12
-    },"3 2": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(3, 2),
         normal: new Vector2(0, 1),
+        outPos: new Vector2(3, 13),
+        outNormal: new Vector2(0, -1),
         maskColor: 0x00FF0001,
-        posX: 3,
-        posY: 2
-    }, "3 13": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(3, 13),
         normal: new Vector2(0, -1),
+        outPos: new Vector2(3, 2),
+        outNormal: new Vector2(0, 1),
         maskColor: 0x00FF0001,
-        posX: 3,
-        posY: 13
-    },
-    "28 2": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(28, 2),
         normal: new Vector2(0, 1),
+        outPos: new Vector2(28, 13),
+        outNormal: new Vector2(0, -1),
         maskColor: 0x00FF0001,
-        posX: 28,
-        posY: 2
-    }, "28 13": {
-        sprite: portalSprite,
+        texture: 2
+    }, {
+        pos: new Vector2(28, 13),
         normal: new Vector2(0, -1),
+        outPos: new Vector2(28, 2),
+        outNormal: new Vector2(0, 1),
         maskColor: 0x00FF0001,
-        posX: 28,
-        posY: 13
+        texture: 2
     }
-};
-map.portals["2 3"].linkedPortal = map.portals["29 3"];
-map.portals["29 3"].linkedPortal = map.portals["2 3"];
-map.portals["2 12"].linkedPortal = map.portals["29 12"];
-map.portals["29 12"].linkedPortal = map.portals["2 12"];
-map.portals["3 2"].linkedPortal = map.portals["3 13"];
-map.portals["3 13"].linkedPortal = map.portals["3 2"];
-map.portals["28 2"].linkedPortal = map.portals["28 13"];
-map.portals["28 13"].linkedPortal = map.portals["28 2"];
+];
 
 let touchControls = new TouchControls();
 let input = new Input(null, touchControls);
@@ -205,6 +198,12 @@ let framesThisPeriod = 0;
 let fps = 0;
 let lastTime = intervalTime;
 
+await Screen.glInit(context, map);
+await Screen.setSkybox(context, "./assets/skybox.png");
+await Screen.addImage(context, "./assets/crate.png");
+await Screen.addImage(context, "./assets/grass.png");
+await Screen.addImage(context, "./assets/portal.png");
+
 let runFunc = function(){
     let now = performance.now();
     while(intervalTime < now){
@@ -212,10 +211,10 @@ let runFunc = function(){
         camera.update(map);
         intervalTime += INTERVAL;
     }
-    
-    Screen.render(context, camera, map, Math.PI / 3, 0.5);
-    context.fillStyle = "yellow";
-    context.font = "bold 12px sans-serif";
+
+    Screen.glRender(context, camera, Math.PI / 3, 0.5);
+    hudContext.fillStyle = "yellow";
+    hudContext.font = "bold 12px sans-serif";
 
     if(now > lastTime + 250){
         let delta = now - lastTime;
@@ -224,7 +223,8 @@ let runFunc = function(){
         framesThisPeriod = 0;
         lastTime = now;
     }
-    context.fillText(fps, 2, 12);
+    hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+    hudContext.fillText(fps, 2, 12);
     framesThisPeriod++;
 
     displayCanvas.width = window.innerWidth;
@@ -243,6 +243,7 @@ let runFunc = function(){
     }
     displayContext.imageSmoothingEnabled = false;
     displayContext.drawImage(canvas, xOff, yOff, canvas.width * scale, canvas.height * scale);
+    displayContext.drawImage(hudCanvas, xOff, yOff, canvas.width * scale, canvas.height * scale);
     if(input.touchEnabled) touchControls.render(displayContext);
     requestAnimationFrame(runFunc);
 }
