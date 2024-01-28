@@ -159,9 +159,9 @@ void main(){
         float wallHeight = screenSize.x / dist / screenSize.y;
         float wallStart = 0.5 - wallHeight * renderHeight;
         if(true){
-            vec2 rotUV = uv;
-            rotUV.x = mod(atan(curDir.y, curDir.x) / 6.283185307179586476925286766559, 1.0);
-            skyBoxColor = texture2D(skybox, rotUV).rgb;
+            vec2 skyUV = uv;
+            skyUV.x = mod(atan(curDir.y, curDir.x) / 6.283185307179586476925286766559, 1.0);
+            skyBoxColor = texture2D(skybox, skyUV).rgb;
         }
 
         if(wall){
@@ -174,7 +174,7 @@ void main(){
                 Portal portal = portals[i];
                 if(portal.pos == floor(mapPos - SHIFT_AMOUNT) && portal.normal == hitNorm){
                     vec4 portalColor = getColor(portal.texture, texUV);
-                    if(length(portalColor - portal.maskColor) < 0.0001){
+                    if(length(portalColor - portal.maskColor) < 0.0039215691){ //Tolerances are inconsistent between browsers. Expect colors one value off on one channel to count towards mask.
                         curPos = portalTranslate(portal, curPos, true);
                         shiftCamPos = portalTranslate(portal, shiftCamPos, true);
                         curForward = portalTranslate(portal, curForward, false);
